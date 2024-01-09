@@ -9,15 +9,16 @@
 
 (do-browser
   (defn server-url []
-    (cond
-      (clojure.string/ends-with? (str (.-location js/window)) "sidebar.html")
-      "ws://0.0.0.0:4401"
+    (str (cond
+           (clojure.string/ends-with? (str (.-location js/window)) "sidebar.html")
+           "ws://0.0.0.0:4401"
 
-      (clojure.string/ends-with? (str (.-location js/window)) "panel.html")
-      "ws://0.0.0.0:4402"
+           (clojure.string/ends-with? (str (.-location js/window)) "panel.html")
+           "ws://0.0.0.0:4402"
 
-      :else
-      "ws://0.0.0.0:4400")
+           :else
+           "ws://0.0.0.0:4400")
+         "?ELECTRIC_USER_VERSION=" ELECTRIC_USER_VERSION)
 
     #_(let [url (new js/URL (.-location js/window))
             proto (.-protocol url)]
