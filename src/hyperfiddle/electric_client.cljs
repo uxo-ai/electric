@@ -1,35 +1,35 @@
 (ns hyperfiddle.electric-client
   (:require [contrib.cljs-target :refer [do-browser]]
-            [missionary.core :as m]
+            [hyperfiddle.electric.impl.io :as io]
             [hyperfiddle.electric.impl.runtime :as r]
-            [hyperfiddle.electric.impl.io :as io])
+            [missionary.core :as m])
   (:import missionary.Cancelled))
 
 (goog-define ELECTRIC_USER_VERSION "hyperfiddle_electric_client__dirty") ; url safe
 
 (do-browser
-  (defn server-url []
-    (str (cond
-           (clojure.string/ends-with? (str (.-location js/window)) "sidebar.html")
-           "ws://0.0.0.0:4401"
+ (defn server-url []
+   (str (cond
+          (clojure.string/ends-with? (str (.-location js/window)) "sidebar.html")
+          "ws://0.0.0.0:4401"
 
-           (clojure.string/ends-with? (str (.-location js/window)) "panel.html")
-           "ws://0.0.0.0:4402"
+          (clojure.string/ends-with? (str (.-location js/window)) "panel.html")
+          "ws://0.0.0.0:4402"
 
-           :else
-           "ws://0.0.0.0:4400")
-         "?ELECTRIC_USER_VERSION=" ELECTRIC_USER_VERSION)
+          :else
+          "ws://0.0.0.0:4400")
+        "?ELECTRIC_USER_VERSION=" ELECTRIC_USER_VERSION)
 
-    #_(let [url (new js/URL (.-location js/window))
-            proto (.-protocol url)]
-        (set! (.-protocol url)
-              (case proto
-                "http:" "ws:"
-                "https:" "wss:"
-                (throw (ex-info "Unexpected protocol" proto))))
-        (.. url -searchParams (set "ELECTRIC_USER_VERSION" ELECTRIC_USER_VERSION))
-        (set! (.-hash url) "") ; fragment is forbidden in WS URL https://websockets.spec.whatwg.org/#ref-for-dom-websocket-websocket%E2%91%A0
-        (.toString url))))
+   #_(let [url (new js/URL (.-location js/window))
+           proto (.-protocol url)]
+       (set! (.-protocol url)
+             (case proto
+               "http:" "ws:"
+               "https:" "wss:"
+               (throw (ex-info "Unexpected protocol" proto))))
+       (.. url -searchParams (set "ELECTRIC_USER_VERSION" ELECTRIC_USER_VERSION))
+       (set! (.-hash url) "") ; fragment is forbidden in WS URL https://websockets.spec.whatwg.org/#ref-for-dom-websocket-websocket%E2%91%A0
+       (.toString url))))
 
 (def ^:dynamic *ws-server-url* (do-browser (server-url)))
 
@@ -43,13 +43,13 @@
       (let [ws (new js/WebSocket url)]
         (set! (.-binaryType ws) "arraybuffer")
         (set! (.-onopen ws)
-          (fn [_]
-            (remove-listeners ws)
-            (s ws)))
+              (fn [_]
+                (remove-listeners ws)
+                (s ws)))
         (set! (.-onclose ws)
-          (fn [_]
-            (remove-listeners ws)
-            (s nil)))
+              (fn [_]
+                (remove-listeners ws)
+                (s nil)))
         #(when (= (.-CONNECTING js/WebSocket) (.-readyState ws))
            (.close ws)))
       (catch :default e
@@ -57,16 +57,16 @@
 
 (defn wait-for-flush [ws]
   (m/sp
-    (while (< 4096 (.-bufferedAmount ws))
-      (m/? (m/sleep 50)))))
+   (while (< 4096 (.-bufferedAmount ws))
+     (m/? (m/sleep 50)))))
 
 (defn wait-for-close [ws]
   (fn [s f]
     (set! (.-onclose ws)
-      (fn [e]
-        (set! (.-onclose ws) nil)
-        (s {:code (.-code e)
-            :reason (.-reason e)})))
+          (fn [e]
+            (set! (.-onclose ws) nil)
+            (s {:code (.-code e)
+                :reason (.-reason e)})))
     #(when-not (nil? (.-onclose ws))
        (set! (.-onclose ws) nil)
        (f (Cancelled.)))))
@@ -93,14 +93,14 @@ msgs : the discrete flow of messages to send, spawned when websocket is connecte
 Returns a task producing nil or failing if the websocket was closed before end of reduction. "
   [cb msgs]
   (m/sp
-    (if-some [ws (m/? (connect *ws-server-url*))]
-      (try
-        (set! (.-onmessage ws) (comp (handle-hf-heartbeat ws cb) payload))
-        (m/? (m/race (send-all ws msgs) (wait-for-close ws)))
-        (finally
-          (when-not (= (.-CLOSED js/WebSocket) (.-readyState ws))
-            (.close ws) (m/? (m/compel wait-for-close)))))
-      {})))
+   (if-some [ws (m/? (connect *ws-server-url*))]
+     (try
+       (set! (.-onmessage ws) (comp (handle-hf-heartbeat ws cb) payload))
+       (m/? (m/race (send-all ws msgs) (wait-for-close ws)))
+       (finally
+         (when-not (= (.-CLOSED js/WebSocket) (.-readyState ws))
+           (.close ws) (m/? (m/compel wait-for-close)))))
+     {})))
 
 (defn fib-iter [[a b]]
   (case b
@@ -117,39 +117,39 @@ Returns a task producing nil or failing if the websocket was closed before end o
 
 (defn boot-with-retry [client conn]
   (m/sp
-    (let [ws-server-url *ws-server-url*]
-      (loop [delays retry-delays]
-        (let [s (object-array 1)]
-          (.log js/console "Connecting...")
-          (when-some [[delay & delays]
-                      (when-some [info (binding [*ws-server-url* ws-server-url]
-                                         (m/? (conn (fn [x] ((aget s 0) x))
-                                                (m/ap
-                                                  (.log js/console "Connected.")
-                                                  (let [r (m/rdv)]
-                                                    (m/amb=
-                                                      (do (m/? (client r (r/subject-at s 0)))
-                                                          (m/amb))
-                                                      (loop []
-                                                        (if-some [x (m/? r)]
-                                                          (m/amb x (recur))
-                                                          (m/amb)))))))))]
-                        (if-some [code (:code info)]
+   (let [ws-server-url *ws-server-url*]
+     (loop [delays retry-delays]
+       (let [s (object-array 1)]
+         (.log js/console "Connecting...")
+         (when-some [[delay & delays]
+                     (when-some [info (binding [*ws-server-url* ws-server-url]
+                                        (m/? (conn (fn [x] ((aget s 0) x))
+                                                   (m/ap
+                                                    (.log js/console "Connected.")
+                                                    (let [r (m/rdv)]
+                                                      (m/amb=
+                                                       (do (m/? (client r (r/subject-at s 0)))
+                                                           (m/amb))
+                                                       (loop []
+                                                         (if-some [x (m/? r)]
+                                                           (m/amb x (recur))
+                                                           (m/amb)))))))))]
+                       (if-some [code (:code info)]
                           ;; TODO wait for tab to be visible before reconnecting. No need to connect a sleeping/throttled tab.
-                          (case code ; https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-                            (1005 1006) (do (.log js/console "Connection lost.") (seq retry-delays))
-                            (1008) (throw (ex-info "Stale client" {:hyperfiddle.electric/type ::stale-client}))
-                            (1013) (do (.log js/console "Server timed out, considering this client inactive.")
-                                       (seq retry-delays))
-                            (throw (ex-info (str "Remote error - " code " " (:reason info)) {})))
-                          (do (.log js/console "Failed to connect.") delays)))]
-            (.log js/console (str "Next attempt in " (/ delay 1000) " seconds."))
-            (recur (m/? (m/sleep delay delays)))))))))
+                         (case code ; https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+                           (1005 1006) (do (.log js/console "Connection lost.") (seq retry-delays))
+                           (1008) (throw (ex-info "Stale client" {:hyperfiddle.electric/type ::stale-client}))
+                           (1013) (do (.log js/console "Server timed out, considering this client inactive.")
+                                      (seq retry-delays))
+                           (throw (ex-info (str "Remote error - " code " " (:reason info)) {})))
+                         (do (.log js/console "Failed to connect.") delays)))]
+           (.log js/console (str "Next attempt in " (/ delay 1000) " seconds."))
+           (recur (m/? (m/sleep delay delays)))))))))
 
 (defn reload-when-stale [task]
   (fn [s f]
     (task s (fn [error]
               (when (= ::stale-client (:hyperfiddle.electric/type (ex-data error)))
                 (do (js/console.log "Server and client version mismatch. Refreshing page.")
-                  (.reload (.-location js/window))))
+                    (.reload (.-location js/window))))
               (f error)))))
