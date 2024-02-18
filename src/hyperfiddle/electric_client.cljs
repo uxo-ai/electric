@@ -13,7 +13,8 @@
           (clojure.string/ends-with? (str (.-location js/window)) "sidebar.html")
           "ws://0.0.0.0:4401"
 
-          (clojure.string/ends-with? (str (.-location js/window)) "panel.html")
+          (or (clojure.string/ends-with? (str (.-location js/window)) "panel.html")
+              (clojure.string/ends-with? (str (.-location js/window)) "electron-main.html"))
           "ws://0.0.0.0:4402"
 
           :else
