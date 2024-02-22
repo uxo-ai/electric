@@ -1,8 +1,6 @@
 # Electric Clojure – a reactive DSL for full-stack web development, with compiler-managed frontend/backend network sync
 
-Electric Clojure's mission is to empower the world's brightest UX luminaries to express shrewd and nuanced designs, and bring them to life. By framing UI as a high frequency concurrency problem, we think Electric is first UI tech equipped to rise to the demands of your full vision, for a fluent, articulate and high-bandwidth human computer interaction.
-
-`com.hyperfiddle/electric {:mvn/version "v2-alpha-469-gb6d9865c"}` · 2023 Nov 22 · [Changelog](CHANGELOG.md)
+`com.hyperfiddle/electric {:mvn/version "v2-alpha-540-ga4699532"}` · 2024 Jan 10 · [Changelog](CHANGELOG.md)
 
 Electric is a **reactive and network-aware Clojure/Script DSL** that fully abstracts over client/server state sync at the programming language layer, in order to achieve **strong composition** across the frontend/backend boundary in dynamic web apps. With Electric, backend expressions (i.e. queries) and frontend expressions (i.e. views) compose directly. There is no incidental network divide. The Electric macros will, at compile time, perform deep graph analysis of your hollistic program's data flow in order to transparently partition and distribute it across the client/server distributed system. There is no client/server dichotomy from the programmer's perspective. All IO and effects are managed.
 
@@ -27,11 +25,11 @@ Our mission is to raise the abstraction ceiling in web development in the same w
 # Tutorial and live examples
 
 - Live Tutorial: https://electric.hyperfiddle.net/
-- [electric starter app](https://github.com/hyperfiddle/electric-starter-app)
-- [XTDB starter app](https://github.com/hyperfiddle/electric-xtdb-starter)
+- [electric starter app](https://github.com/hyperfiddle/electric-starter-app) – minimalist entrypoint
+- Demos repo: [electric-fiddle](https://github.com/hyperfiddle/electric-fiddle)
 
 # Documentation
-- [Docs site (wip)](https://hyperfiddle.github.io/)
+- [Talk: Electric Clojure — London Clojurians (2023)](https://www.youtube.com/watch?v=v-GE_P1JSOQ)
 - [UIs are streaming DAGs (2022)](https://hyperfiddle.notion.site/UIs-are-streaming-DAGs-e181461681a8452bb9c7a9f10f507991)
 - [You don't need a web framework, you need a web language (2021)](https://hyperfiddle.notion.site/Reactive-Clojure-You-don-t-need-a-web-framework-you-need-a-web-language-44b5bfa526be4af282863f34fa1cfffc)
 - https://clojureverse.org/t/electric-clojure-a-signals-dsl-for-fullstack-web-ui/9788
