@@ -9,16 +9,28 @@
 
 (do-browser
  (defn server-url []
-   (let [url (new js/URL (.-location js/window))
-         proto (.-protocol url)]
-     (set! (.-protocol url)
-           (case proto
-             "http:" "ws:"
-             "https:" "wss:"
-             (throw (ex-info "Unexpected protocol" proto))))
-     (.. url -searchParams (set "ELECTRIC_USER_VERSION" ELECTRIC_USER_VERSION))
-     (set! (.-hash url) "") ; fragment is forbidden in WS URL https://websockets.spec.whatwg.org/#ref-for-dom-websocket-websocket%E2%91%A0
-     (.toString url))))
+   (str (cond
+          (clojure.string/ends-with? (str (.-location js/window)) "sidebar.html")
+          "ws://0.0.0.0:4401"
+
+          (or (clojure.string/ends-with? (str (.-location js/window)) "panel.html")
+              (clojure.string/ends-with? (str (.-location js/window)) "electron-main.html"))
+          "ws://0.0.0.0:4402"
+
+          :else
+          "ws://0.0.0.0:4400")
+        "?ELECTRIC_USER_VERSION=" ELECTRIC_USER_VERSION)
+
+   #_(let [url (new js/URL (.-location js/window))
+           proto (.-protocol url)]
+       (set! (.-protocol url)
+             (case proto
+               "http:" "ws:"
+               "https:" "wss:"
+               (throw (ex-info "Unexpected protocol" proto))))
+       (.. url -searchParams (set "ELECTRIC_USER_VERSION" ELECTRIC_USER_VERSION))
+       (set! (.-hash url) "") ; fragment is forbidden in WS URL https://websockets.spec.whatwg.org/#ref-for-dom-websocket-websocket%E2%91%A0
+       (.toString url))))
 
 (def ^:dynamic *ws-server-url* (do-browser (server-url)))
 
